@@ -1,21 +1,26 @@
 {
-  "name": "ff-bible",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "name": "jeffrin-diagnal",
+  "description": "Diagnal test project",
+  "version": "0.0.1",
+  "private": true,
+  "license": "ISC",
+  "author": "Jeffrin",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JeffrinManovaPrabahar/ff-bible.git"
+    "url": "https://github.com/JeffrinManovaPrabahar/diagnal.git"
   },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/JeffrinManovaPrabahar/ff-bible/issues"
+  "engines": {
+    "node": ">=4.3.2"
   },
-  "homepage": "https://github.com/JeffrinManovaPrabahar/ff-bible#readme",
+  "scripts": {
+    "deploy": "gcloud app deploy",
+    "start": "node app.js",
+    "lint": "repo-tools lint",
+    "pretest": "npm run lint",
+    "system-test": "repo-tools test app",
+    "test": "npm run system-test",
+    "e2e-test": "repo-tools test deploy"
+  },
   "dependencies": {
     "axios": "^0.18.0",
     "express": "^4.16.4",
@@ -26,5 +31,14 @@
   },
   "devDependencies": {
     "json-server": "^0.14.2"
+  },
+  "cloud-repo-tools": {
+    "test": {
+      "app": {
+        "msg": "Hello, world!"
+      }
+    },
+    "requiresKeyFile": true,
+    "requiresProjectId": true
   }
 }
