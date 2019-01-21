@@ -1,0 +1,40 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: auto;
+}
+
+body {
+    color: #FFF;
+    background-color: #171717;
+    font-family: 'Titillium Web', sans-serif;
+}
+
+.header {
+    background: url("../imgs/nav_bar.png");
+    background-repeat: repeat-x;
+    background-size: cover;
+    background-position: bottom;
+}
+
+.pl-2 {
+    padding-left: 0.7rem !important;
+}
+
+.pb-2 {
+    padding-bottom: 0.7rem !important;
+}
+
+.pr-2 {
+    padding-right: 0.7rem !important;
+}
+
+.mt-4 {
+    margin-top: 1.8rem !important;
+}
+
+.h-35 {
+    height: 35% !important;
+}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Diagnal Test Project</title>
+    <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
+    <link rel="stylesheet" href="./css/bootstrap.css">
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body data-ng-app="movieListing" data-onscroll="loadNextOnEndOfPage()" data-ng-controller="movieListController">
+    <div class="container-fluid header sticky-top">
+        <div class="row pt-3 pb-3 pb-2 px-3">
+            <div class="col-auto p-0">
+                <img class="img-fluid h-35" src="/imgs/Back.png" alt="">
+            </div>
+            <div class="col-auto p-0 ml-3" style="font-size:15pt;">
+                Romantic Comedy
+            </div>
+            <div class="col p-0 text-right">
+                <img class="img-fluid h-35" src="/imgs/search.png" alt="">
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid" style="margin-top:-1.9rem;">
+        <div class="row p-0 pl-2 pb-2">
+            <div ng-if="!!list.length" data-ng-repeat="item in list track by $index" class="col-4 pr-2 p-0 mt-4">
+                <object class="img-fluid d-block w-100" data="/imgs/{{item['poster-image']}}" type="image/jpg">
+                    <img class="img-fluid d-block w-100" src="/imgs/placeholder_for_missing_posters.png" />
+                </object>
+                <div class="mt-1 text-truncate" style="font-size:11pt;">{{item.name}}</div>
+            </div>
+        </div>
+    </div>
+    <!-- <script src="./js/angular.min.js"></script> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
+
+    <script>
+        angular.module("movieListing", [])
+            .controller('movieListController', ['$scope', '$http', function ($scope, $http) {
+                $scope.list = [];
+                $scope.requestComplete = true;
+                $scope.lastPageDetail = {
+                    "title": null,
+                    "total-content-items": null,
+                    "page-num-requested": "0",
+                    "page-size-requested": null,
+                    "page-size-returned": null
+                };
+                $scope.loadNextOnEndOfPage = function () {
+                    if (($scope.lastPageDetail["page-size-requested"] ===
+                        $scope.lastPageDetail["page-size-returned"] ||
+                        $scope.lastPageDetail["title"] === null) &&
+                        $scope.requestComplete) {
+                        $scope.requestComplete = false;
+                        var url = `/api/CONTENTLISTINGPAGE-PAGE${Number($scope.lastPageDetail["page-num-requested"]) + 1}.json`;
+                        $http.get(url).then(function (res) {
+                            $scope.requestComplete = true;
+                            let page = res.data.page;
+                            $scope.lastPageDetail["title"] = page["title"];
+                            $scope.lastPageDetail["total-content-items"] = page["total-content-items"];
+                            $scope.lastPageDetail["page-num-requested"] = page["page-num-requested"];
+                            $scope.lastPageDetail["page-size-requested"] = page["page-size-requested"];
+                            $scope.lastPageDetail["page-size-returned"] = page["page-size-returned"];
+                            $scope.list.push(...page["content-items"].content);
+                        });
+                    }
+                }
+                $scope.loadNextOnEndOfPage();
+            }])
+            .directive("onscroll", function ($window) {
+                return {
+                    restrict: "A",
+                    link: function ($scope, $elem, $attrs) {
+                        $elem.bind("scroll", function (e) {
+                            if ($elem[0].scrollTop + $elem[0].offsetHeight >= $elem[0].scrollHeight - 50) {
+                                $scope.$apply($attrs.onscroll);
+                            }
+                        });
+                    }
+                };
+            });
+    </script>
+</body>
+
+</html>
