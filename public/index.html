@@ -9,25 +9,27 @@
     <link href="https://fonts.googleapis.com/css?family=Titillium+Web" rel="stylesheet">
     <link rel="stylesheet" href="./css/bootstrap.css">
     <link rel="stylesheet" href="./css/style.css">
+    <!-- <script src="./js/angular.min.js"></script> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
 </head>
 
 <body data-ng-app="movieListing" data-onscroll="loadNextOnEndOfPage()" data-ng-controller="movieListController">
-    <div class="container-fluid header sticky-top">
-        <div class="row pt-3 pb-3 pb-2 px-3">
-            <div class="col-auto p-0">
-                <img class="img-fluid h-35" src="/imgs/Back.png" alt="">
-            </div>
-            <div class="col-auto p-0 ml-3" style="font-size:15pt;">
-                Romantic Comedy
-            </div>
-            <div class="col p-0 text-right">
-                <img class="img-fluid h-35" src="/imgs/search.png" alt="">
-            </div>
+    <div class="container-fluid d-flex justify-content-start header sticky-top pl-3 pr-3 pt-2 pb-3 ">
+        <div class="p-0 {{(showInput)? 'pointer': ''}}" data-ng-click="backClick()">
+            <img class="img-fluid h-35" src="/imgs/Back.png" alt="">
+        </div>
+        <div class="p-0 ml-3 mr-3 d-flex flex-column flex-grow">
+            <span class="{{(showInput)?'d-none' : 'd-block'}}" style="font-size:15pt;">{{title}}</span>
+            <input id="searchBox" class="{{(showInput)? 'd-block': 'd-none'}}" type="text" data-ng-change="search()"
+                ng-model="searchText" placeholder="Search...">
+        </div>
+        <div class="p-0 {{(showInput)? '': 'pointer'}}" data-ng-click="searchClick()">
+            <img class="img-fluid h-35" src="/imgs/search.png" alt="">
         </div>
     </div>
     <div class="container-fluid" style="margin-top:-1.9rem;">
         <div class="row p-0 pl-2 pb-2">
-            <div ng-if="!!list.length" data-ng-repeat="item in list track by $index" class="col-4 pr-2 p-0 mt-4">
+            <div ng-if="!!itemsToShow.length" data-ng-repeat="item in itemsToShow track by $index" class="col-4 pr-2 p-0 mt-4">
                 <object class="img-fluid d-block w-100" data="/imgs/{{item['poster-image']}}" type="image/jpg">
                     <img class="img-fluid d-block w-100" src="/imgs/placeholder_for_missing_posters.png" />
                 </object>
@@ -35,13 +37,17 @@
             </div>
         </div>
     </div>
-    <!-- <script src="./js/angular.min.js"></script> -->
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
-
     <script>
         angular.module("movieListing", [])
-            .controller('movieListController', ['$scope', '$http', function ($scope, $http) {
-                $scope.list = [];
+            .controller('movieListController', ['$scope', '$http', '$window', '$timeout', function ($scope, $http, $window, $timeout) {
+                $scope.title = "";
+                $scope.loadAll = false;
+                $scope.showInput = false;
+                $scope.searchText = "";
+                $scope._searchText = "";
+                $scope.itemsToShow = [];
+                $scope.dataFetched = {};
+                $scope.lastPageRendered = 0;
                 $scope.requestComplete = true;
                 $scope.lastPageDetail = {
                     "title": null,
@@ -50,7 +56,29 @@
                     "page-size-requested": null,
                     "page-size-returned": null
                 };
-                $scope.loadNextOnEndOfPage = function () {
+
+                $scope.backClick = function () {
+                    if ($scope.showInput) {
+                        $scope.searchClick();
+                    }
+                };
+
+                $scope.searchClick = function () {
+                    $scope.showInput = !$scope.showInput;
+                    if ($scope.showInput) {
+                        $scope.searchText = $scope._searchText;
+                        $scope.search();
+                        $timeout(function () {
+                            $window.document.getElementById("searchBox").focus();
+                        });
+                    } else {
+                        $scope._searchText = $scope.searchText;
+                        $scope.searchText = "";
+                        $scope.search(false);
+                    }
+                };
+
+                $scope.loadNextOnEndOfPage = function (doNotRender, func) {
                     if (($scope.lastPageDetail["page-size-requested"] ===
                         $scope.lastPageDetail["page-size-returned"] ||
                         $scope.lastPageDetail["title"] === null) &&
@@ -65,10 +93,56 @@
                             $scope.lastPageDetail["page-num-requested"] = page["page-num-requested"];
                             $scope.lastPageDetail["page-size-requested"] = page["page-size-requested"];
                             $scope.lastPageDetail["page-size-returned"] = page["page-size-returned"];
-                            $scope.list.push(...page["content-items"].content);
+                            $scope.dataFetched[page["page-num-requested"]] = [...page["content-items"].content];
+                            if (doNotRender !== true) {
+                                $scope.title = page["title"];
+                                $scope.lastPageRendered = page["page-num-requested"];
+                                $scope.itemsToShow.push(...page["content-items"].content);
+                            }
+                            if ($scope.loadAll === true) {
+                                $scope.loadNextOnEndOfPage(doNotRender, func);
+                            }
                         });
+                    } else if ($scope.lastPageDetail["page-size-requested"] !==
+                        $scope.lastPageDetail["page-size-returned"]) {
+                        if ($scope.dataFetched[Number($scope.lastPageRendered) + 1] !== undefined) {
+                            $scope.itemsToShow.push(...$scope.dataFetched[Number($scope.lastPageRendered) + 1]);
+                            $scope.lastPageRendered = Number($scope.lastPageRendered) + 1;
+                        }
+                        if (func !== undefined) {
+                            $scope.loadAll = false;
+                            func();
+                        }
                     }
                 }
+
+                $scope.getAllData = function (func, fetchNewData) {
+                    if ($scope.lastPageDetail["page-size-requested"] ===
+                        $scope.lastPageDetail["page-size-returned"] &&
+                        !($scope.searchText === "" && $scope._searchText === "" && fetchNewData !== false)) {
+                        $scope.loadAll = true;
+                        $scope.loadNextOnEndOfPage(true, func);
+                    } else {
+                        func();
+                    }
+                };
+
+                $scope.search = function (fetchNewData) {
+                    $scope.getAllData(function () {
+                        let allData = [];
+                        for (let a in $scope.dataFetched) {
+                            allData.push(...$scope.dataFetched[a]);
+                            if (a == $scope.lastPageRendered) break;
+                        }
+                        let matchedItems = [];
+                        for (let a = 0; a < allData.length; a++) {
+                            if (allData[a].name.slice(0, $scope.searchText.length) === $scope.searchText) {
+                                matchedItems.push(allData[a]);
+                            }
+                        }
+                        $scope.itemsToShow = matchedItems;
+                    }, fetchNewData);
+                };
                 $scope.loadNextOnEndOfPage();
             }])
             .directive("onscroll", function ($window) {

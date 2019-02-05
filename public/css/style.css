@@ -7,6 +7,7 @@ html {
 }
 
 body {
+    min-width: 280px;
     color: #FFF;
     background-color: #171717;
     font-family: 'Titillium Web', sans-serif;
@@ -37,4 +38,27 @@ body {
 
 .h-35 {
     height: 35% !important;
+}
+
+.flex-grow {
+    flex: 1 0 auto;
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+input[type=text] {
+    background-color: transparent;
+    border-radius: 0;
+    border: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    font-family: inherit;
+    font-size: 1em;
+    color: #FFF;
+}
+
+input[type=text]:focus {
+    outline: none;
 }
