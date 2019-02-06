@@ -13,7 +13,7 @@
     <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.6/angular.min.js"></script>
 </head>
 
-<body data-ng-app="movieListing" data-onscroll="loadNextOnEndOfPage()" data-ng-controller="movieListController">
+<body class="mx-auto" data-ng-app="movieListing" data-onscroll="loadNextOnEndOfPage()" data-ng-controller="movieListController">
     <div class="container-fluid d-flex justify-content-start header sticky-top pl-3 pr-3 pt-2 pb-3 ">
         <div class="p-0 {{(isShowingSearchBox)? 'pointer': ''}}" data-ng-click="backBtnClick()">
             <img class="img-fluid h-35" src="/imgs/Back.png" alt="">
